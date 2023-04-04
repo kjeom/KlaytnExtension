@@ -111,19 +111,3 @@ def from_bytes(cls, encoded_transaction: HexBytes) -> "TypedTransaction":
         transaction_type=transaction_type,
         transaction=transaction,
     )
-
-def __init__(
-        self, transaction_type: int, transaction: _TypedTransactionImplementation
-    ):
-        """Should not be called directly. Use instead the 'from_dict' method."""
-        if not isinstance(transaction, _TypedTransactionImplementation):
-            raise TypeError(
-                "expected _TypedTransactionImplementation, got %s" % type(transaction)
-            )
-        if not isinstance(transaction_type, int):
-            raise TypeError("expected int, got %s" % type(transaction_type))
-        self.transaction_type = transaction_type
-        self.transaction = transaction
-
-def encode(self) -> bytes:
-    return bytes([self.transaction_type]) + self.transaction.payload()

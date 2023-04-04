@@ -13,6 +13,7 @@ from eth_account._utils.signing import (
     TypedTransaction,
     UnsignedTransaction,
 )
+import eth_account.account as eth_account
 from eth_utils.curried import (
     keccak,
 )
@@ -138,40 +139,48 @@ class KlaytnSignedTransaction(NamedTuple):
         except TypeError:
             return getattr(self, index)
 
-
-def sign_transaction(self, transaction_dict, private_key):
+def ethereum_sign_transaction(self, transaction_dict, private_key):
     if not isinstance(transaction_dict, Mapping):
-        raise TypeError("transaction_dict must be dict-like, got %r" % transaction_dict)
+        raise TypeError(
+            "transaction_dict must be dict-like, got %r" % transaction_dict
+        )
 
     account = self.from_key(private_key)
 
-    if "type" in transaction_dict and hexstr_if_str(to_int, transaction_dict["type"]) < 8:
-        # allow from field, *only* if it matches the private key
-        if "from" in transaction_dict:
-            if transaction_dict["from"] == account.address:
-                sanitized_transaction = dissoc(transaction_dict, "from")
-            else:
-                raise TypeError(
-                    "from field must match key's %s, but it was %s"
-                    % (
-                        account.address,
-                        transaction_dict["from"],
-                    )
-                )
+    # allow from field, *only* if it matches the private key
+    if "from" in transaction_dict:
+        if transaction_dict["from"] == account.address:
+            sanitized_transaction = dissoc(transaction_dict, "from")
         else:
-            sanitized_transaction = transaction_dict
-
-        # sign transaction
-        v, r, s, encoded_transaction = sign_transaction_dict(account._key_obj, sanitized_transaction)
-        transaction_hash = keccak(encoded_transaction)
-        return SignedTransaction(
-            rawTransaction=HexBytes(encoded_transaction),
-            hash=HexBytes(transaction_hash),
-            r=r,
-            s=s,
-            v=v,
-        )
+            raise TypeError(
+                "from field must match key's %s, but it was %s"
+                % (
+                    account.address,
+                    transaction_dict["from"],
+                )
+            )
     else:
+        sanitized_transaction = transaction_dict
+
+    # sign transaction
+    v,r,s,encoded_transaction = sign_transaction_dict(account._key_obj, sanitized_transaction)
+    transaction_hash = keccak(encoded_transaction)
+
+    return SignedTransaction(
+        rawTransaction=HexBytes(encoded_transaction),
+        hash=HexBytes(transaction_hash),
+        r=r,
+        s=s,
+        v=v,
+    )
+    
+def klaytn_sign_transaction(self, transaction_dict, private_key):
+    if "type" in transaction_dict and hexstr_if_str(to_int, transaction_dict["type"]) < 8:
+        return ethereum_sign_transaction(self, transaction_dict, private_key)
+    else:
+        if not isinstance(transaction_dict, Mapping):
+            raise TypeError("transaction_dict must be dict-like, got %r" % transaction_dict)
+        account = self.from_key(private_key)
         v, r, s, encoded_transaction, transaction_hash, senderTxHash = sign_klaytn_transaction_dict(account._key_obj, transaction_dict)
         return KlaytnSignedTransaction(
             rawTransaction=HexBytes(encoded_transaction),
