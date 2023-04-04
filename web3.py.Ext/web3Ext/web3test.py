@@ -38,36 +38,8 @@ def web3_account_update_multisig():
     valueTransferTx['chainId'] = 2019
     valueTransferTx['nonce'] = 10
     transaction.fill_transaction(valueTransferTx)
-    print(valueTransferTx)
     signedTx = Account.sign_transaction(valueTransferTx, user1_updator.key)
-    print(signedTx.rawTransaction.hex())
     result = w3.eth.send_raw_transaction(signedTx.rawTransaction)
     print(result.hex())
-
-    # tx = {
-    #     'to': '0xF0109fC8DF283027b6285cc889F5aA624EaC1F55',
-    #     'value': 1000000000,
-    #     'gas': 2000000,
-    #     'maxFeePerGas': 2000000000,
-    #     'maxPriorityFeePerGas': 1000000000,
-    #     'nonce': 0,
-    #     'chainId': 1,
-    #     'type': '0x2',  # the type is optional and, if omitted, will be interpreted based on the provided transaction parameters
-    #     'accessList': (  # accessList is optional for dynamic fee transactions
-    #         {
-    #             'address': '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
-    #             'storageKeys': (
-    #                 '0x0000000000000000000000000000000000000000000000000000000000000003',
-    #                 '0x0000000000000000000000000000000000000000000000000000000000000007',
-    #             )
-    #         },
-    #         {
-    #             'address': '0xbb9bc244d798123fde783fcc1c72d3bb8c189413',
-    #             'storageKeys': ()
-    #         },
-    #     )
-    # }
-    # signedTx = Account.sign_transaction(tx, user1_updator.key)
-    # print(signedTx)
 
 web3_account_update_multisig()

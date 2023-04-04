@@ -23,8 +23,18 @@ class AcstractAccountStore:
     def __init__(self):
         self.account_store = {}
 
+    # Ex)
+    # AbstractAccount = {
+    #   '0x{address}' : {
+    #      'type': ACCOUNT_KEY_WEIGHTED_MULTISIG_TAG,
+    #           'threshold':0,
+    #           'keys' : {} 
+    #   }
+    # }
     def add(self, address, keyring):
         if not Web3.is_address(address):
+            return False
+        if address in self.account_store.keys():
             return False
         if self.validate_keyring(keyring):
             return False
@@ -32,6 +42,15 @@ class AcstractAccountStore:
         self.account_store[address] = keyring
         return True
     
+    def replace(self, address, keyring):
+        if not Web3.is_address(address):
+            return False
+        if self.validate_keyring(keyring):
+            return False
+         
+        self.account_store[address] = keyring
+        return True 
+
     def is_in_account_store(self, address):
         if address in self.account_store.keys():
             return True
