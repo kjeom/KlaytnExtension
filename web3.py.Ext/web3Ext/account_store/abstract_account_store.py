@@ -19,7 +19,7 @@ ROLE_LAST = 3
 # Maximum key number in multisig/rolebased
 MAXIMUM_KEY_NUM = 10
 
-class AcstractAccountStore:
+class AbstractAccountStore:
     def __init__(self):
         self.account_store = {}
 
