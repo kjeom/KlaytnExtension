@@ -9,10 +9,22 @@ from cytoolz import (
 from hexbytes import (
     HexBytes,
 )
-from .value_transfer_transaction import ValueTransferTransaction
+from .basic.value_transfer_transaction import ValueTransferTransaction
+from .basic.value_transfer_with_memo_transaction import ValueTransferWithMemoTransaction
+from .basic.smart_contract_deploy_transaction import SmartContractDeployTransaction
+from .basic.smart_contract_execution_transaction import SmartContractExecutionTransaction
+from .basic.account_update_transaction import AccountUpdateTransaction
+from .basic.cancel_transaction import CancelTransaction
+from .basic.chaindata_anchoring_transaction import ChaindataAnchoringTransaction
+from .fee_delegation.fee_delegated_value_transfer_transaction import FeeDelegatedValueTransferTransaction
+from .fee_delegation.fee_delegated_value_transfer_with_memo_transaction import FeeDelegatedValueTransferWithMemoTransaction
+# from .fee_delegation.fee_delegated_smart_contract_deploy_transaction import FeeDelegatedSmartContractDeployTransaction
+# from .fee_delegation.fee_delegated_smart_contract_execution_transaction import FeeDelegatedSmartContractExecutionTransaction
+# from .fee_delegation.fee_delegated_account_update_transaction import FeeDelegatedAccountUpdateTransaction
+# from .fee_delegation.fee_delegated_cancel_transaction import FeeDelegatedCancelTransaction
+# from .fee_delegation.fee_delegated_chaindata_anchoring_transaction import FeeDelegatedChaindataAnchoringTransaction
 from eth_account._utils.typed_transactions import (
     TypedTransaction,
-    _TypedTransactionImplementation,
     AccessListTransaction,
     DynamicFeeTransaction,
     HexBytes,
@@ -22,13 +34,19 @@ from eth_account._utils.typed_transactions import (
 from eth_utils.curried import (
     hexstr_if_str,
     to_int,
-    to_bytes,
 )
 from eth_account._utils.transaction_utils import (
     set_transaction_type_if_needed,
 )
 from eth_account._utils.validation import (
     is_int_or_prefixed_hexstr,
+)
+from web3.method import (
+    Method,
+    default_root_munger,
+)
+from web3.types import (
+    RPCEndpoint,
 )
 
 # Klaytn wrapped typed transaction
@@ -71,7 +89,6 @@ def from_dict(cls, dictionary: Dict[str, Any]) -> "TypedTransaction":
         raise ValueError("missing or incorrect transaction type")
     # Switch on the transaction type to choose the correct constructor.
     transaction_type = pipe(dictionary["type"], hexstr_if_str(to_int))
-    klaytn_transaction_type = dictionary["type"]
     transaction: Any
     if transaction_type == AccessListTransaction.transaction_type:
         transaction = AccessListTransaction
@@ -79,6 +96,33 @@ def from_dict(cls, dictionary: Dict[str, Any]) -> "TypedTransaction":
         transaction = DynamicFeeTransaction
     elif transaction_type == ValueTransferTransaction.transaction_type:
         transaction = ValueTransferTransaction
+    elif transaction_type == ValueTransferWithMemoTransaction.transaction_type:
+        transaction = ValueTransferWithMemoTransaction
+    elif transaction_type == SmartContractDeployTransaction.transaction_type:
+        transaction = SmartContractDeployTransaction
+    elif transaction_type == SmartContractExecutionTransaction.transaction_type:
+        transaction = SmartContractExecutionTransaction
+    elif transaction_type == AccountUpdateTransaction.transaction_type:
+        transaction = AccountUpdateTransaction
+    elif transaction_type == CancelTransaction.transaction_type:
+        transaction = CancelTransaction
+    elif transaction_type == ChaindataAnchoringTransaction.transaction_type:
+        transaction = ChaindataAnchoringTransaction
+    elif transaction_type == FeeDelegatedValueTransferTransaction.transaction_type:
+        transaction = FeeDelegatedValueTransferTransaction
+    elif transaction_type == FeeDelegatedValueTransferWithMemoTransaction.transaction_type:
+        transaction = FeeDelegatedValueTransferWithMemoTransaction
+    # elif transaction_type == FeeDelegatedSmartContractDeployTransaction.transaction_type:
+    #     transaction = FeeDelegatedSmartContractDeployTransaction
+    # elif transaction_type == FeeDelegatedSmartContractExecutionTransaction.transaction_type:
+    #     transaction = FeeDelegatedSmartContractExecutionTransaction
+    # elif transaction_type == FeeDelegatedAccountUpdateTransaction.transaction_type:
+    #     transaction = FeeDelegatedAccountUpdateTransaction
+    # elif transaction_type == FeeDelegatedCancelTransaction.transaction_type:
+    #     transaction = FeeDelegatedCancelTransaction
+    # elif transaction_type == FeeDelegatedChaindataAnchoringTransaction.transaction_type:
+    #     transaction = FeeDelegatedChaindataAnchoringTransaction
+    
     else:
         raise TypeError("Unknown Transaction type: %s" % transaction_type)
     return cls(
@@ -102,6 +146,45 @@ def from_bytes(cls, encoded_transaction: HexBytes) -> "TypedTransaction":
     elif encoded_transaction[0] == ValueTransferTransaction.transaction_type:
         transaction_type = ValueTransferTransaction.transaction_type
         transaction = ValueTransferTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == ValueTransferWithMemoTransaction.transaction_type:
+        transaction_type = ValueTransferWithMemoTransaction.transaction_type
+        transaction = ValueTransferWithMemoTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == SmartContractDeployTransaction.transaction_type:
+        transaction_type = SmartContractDeployTransaction.transaction_type
+        transaction = SmartContractDeployTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == SmartContractExecutionTransaction.transaction_type:
+        transaction_type = SmartContractExecutionTransaction.transaction_type
+        transaction = SmartContractExecutionTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == AccountUpdateTransaction.transaction_type:
+        transaction_type = AccountUpdateTransaction.transaction_type
+        transaction = AccountUpdateTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == CancelTransaction.transaction_type:
+        transaction_type = CancelTransaction.transaction_type
+        transaction = CancelTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == ChaindataAnchoringTransaction.transaction_type:
+        transaction_type = ChaindataAnchoringTransaction.transaction_type
+        transaction = ChaindataAnchoringTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == FeeDelegatedValueTransferTransaction.transaction_type:
+        transaction_type = FeeDelegatedValueTransferTransaction.transaction_type
+        transaction = FeeDelegatedValueTransferTransaction.from_bytes(encoded_transaction)
+    elif encoded_transaction[0] == FeeDelegatedValueTransferWithMemoTransaction.transaction_type:
+        transaction_type = FeeDelegatedValueTransferWithMemoTransaction.transaction_type
+        transaction = FeeDelegatedValueTransferWithMemoTransaction.from_bytes(encoded_transaction)
+    # elif encoded_transaction[0] == FeeDelegatedSmartContractDeployTransaction.transaction_type:
+    #     transaction_type = FeeDelegatedSmartContractDeployTransaction.transaction_type
+    #     transaction = FeeDelegatedSmartContractDeployTransaction.from_bytes(encoded_transaction)
+    # elif encoded_transaction[0] == FeeDelegatedSmartContractExecutionTransaction.transaction_type:
+    #     transaction_type = FeeDelegatedSmartContractExecutionTransaction.transaction_type
+    #     transaction = FeeDelegatedSmartContractExecutionTransaction.from_bytes(encoded_transaction)
+    # elif encoded_transaction[0] == FeeDelegatedAccountUpdateTransaction.transaction_type:
+    #     transaction_type = FeeDelegatedAccountUpdateTransaction.transaction_type
+    #     transaction = FeeDelegatedAccountUpdateTransaction.from_bytes(encoded_transaction)
+    # elif encoded_transaction[0] == FeeDelegatedCancelTransaction.transaction_type:
+    #     transaction_type = FeeDelegatedCancelTransaction.transaction_type
+    #     transaction = FeeDelegatedCancelTransaction.from_bytes(encoded_transaction)
+    # elif encoded_transaction[0] == FeeDelegatedChaindataAnchoringTransaction.transaction_type:
+    #     transaction_type = FeeDelegatedChaindataAnchoringTransaction.transaction_type
+    #     transaction = FeeDelegatedChaindataAnchoringTransaction.from_bytes(encoded_transaction)
     else:
         # The only known transaction types should be explicit if/elif branches.
         raise TypeError(
@@ -111,3 +194,8 @@ def from_bytes(cls, encoded_transaction: HexBytes) -> "TypedTransaction":
         transaction_type=transaction_type,
         transaction=transaction,
     )
+
+_klay_send_raw_transaction = Method(
+    RPCEndpoint("klay_sendRawTransaction"),
+    mungers=[default_root_munger],
+)
